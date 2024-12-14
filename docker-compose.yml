@@ -1,0 +1,177 @@
+---
+services:
+  sonarr:
+    image: lscr.io/linuxserver/sonarr:latest
+    container_name: sonarr
+    environment:
+      - PUID=${UID}
+      - PGID=${UID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_DIR}/sonarr-config:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - "8989:8989"
+    restart: unless-stopped
+
+  radarr:
+    image: lscr.io/linuxserver/radarr:latest
+    container_name: radarr
+    environment:
+      - PUID=${UID}
+      - PGID=${UID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_DIR}/radarr-config:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - "7878:7878"
+    restart: unless-stopped
+
+  lidarr:
+    image: lscr.io/linuxserver/lidarr:latest
+    container_name: lidarr
+    environment:
+      - PUID=${UID}
+      - PGID=${UID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_DIR}/lidarr-config:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - "8686:8686"
+    restart: unless-stopped
+
+  readarr:
+    image: lscr.io/linuxserver/readarr:develop
+    container_name: readarr
+    environment:
+      - PUID=${UID}
+      - PGID=${UID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_DIR}/readarr-config:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - "8787:8787"
+    restart: unless-stopped
+
+  bazarr:
+    image: lscr.io/linuxserver/bazarr:latest
+    container_name: bazarr
+    environment:
+      - PUID=${UID}
+      - PGID=${UID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_DIR}/bazarr-config:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - "6767:6767"
+    restart: unless-stopped
+
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:develop
+    container_name: prowlarr
+    environment:
+      - PUID=${UID}
+      - PGID=${UID}
+      - TZ=${TIMEZONE}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ${CONFIG_DIR}/prowlarr-config:/config
+      - ${DATA_DIR}:/data
+    ports:
+      - "9696:9696"
+    restart: unless-stopped
+  
+  notifiarr:
+    container_name: notifiarr
+    hostname: notifiarr
+    image: golift/notifiarr
+    restart: unless-stopped
+    ports:
+      - "5454:5454"
+    volumes:
+      - ${CONFIG_DIR}/notifiarr-config:/config
+      - /var/run/utmp:/var/run/utmp
+      - /etc/machine-id:/etc/machine-id
+
+  qbittorrent:
+    image: qbittorrentofficial/qbittorrent-nox:latest
+    container_name: qbittorrent
+    environment:
+      - PUID=${UID}
+      - PGID=${UID}
+      - TZ=${TIMEZONE}
+      - WEBUI_PORT=8080
+    volumes:
+      - ${CONFIG_DIR}/qbittorrent-config:/config
+      - ${DATA_DIR}/torrents/:/data/torrents/
+    ports:
+      - "8080:8080"
+      - "6881:6881"
+      - "6881:6881/udp"
+    restart: unless-stopped
+  
+  qbit_manage:
+    container_name: qbit_manage
+    image: ghcr.io/stuffanthings/qbit_manage:latest
+    volumes:
+      - /mnt/user/appdata/qbit_manage/:/config:rw
+      - /mnt/user/data/torrents/:/data/torrents:rw
+      - /mnt/user/appdata/qbittorrent/:/qbittorrent/:ro
+    environment:
+      - QBT_RUN=false
+      - QBT_SCHEDULE=1440
+      - QBT_CONFIG=config.yml
+      - QBT_LOGFILE=activity.log
+      - QBT_CROSS_SEED=false
+      - QBT_RECHECK=false
+      - QBT_CAT_UPDATE=false
+      - QBT_TAG_UPDATE=false
+      - QBT_REM_UNREGISTERED=false
+      - QBT_REM_ORPHANED=false
+      - QBT_TAG_TRACKER_ERROR=false
+      - QBT_TAG_NOHARDLINKS=false
+      - QBT_SHARE_LIMITS=false
+      - QBT_SKIP_CLEANUP=false
+      - QBT_DRY_RUN=false
+      - QBT_LOG_LEVEL=INFO
+      - QBT_DIVIDER==
+      - QBT_WIDTH=100
+    restart: on-failure:2
+
+  jellyseerr:
+    image: fallenbagel/jellyseerr:latest
+    container_name: jellyseerr
+    environment:
+      - LOG_LEVEL=debug
+      - TZ=${TIMEZONE}
+      - JELLYFIN_TYPE=emby
+    volumes:
+      - ${CONFIG_DIR}/jellyseerr-config:/app/config
+    ports:
+      - "5055:5055"
+    dns:
+      - 8.8.8.8
+    restart: unless-stopped
+
+  emby:
+    image: emby/embyserver_arm64v8
+    container_name: embyserver
+    environment:
+      - UID=${UID}
+      - GID=${UID}
+    volumes:
+      - ${CONFIG_DIR}/emby-config:/config
+      - ${DATA_DIR}/media/:/data/media/
+    ports:
+      - 8097:8096  # Puerto HTTP de Emby
+      - 8921:8920  # Puerto HTTPS de Emby (opcional)
+    restart: unless-stopped

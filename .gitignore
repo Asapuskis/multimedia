@@ -1,0 +1,18 @@
+echo "# Ignore environment variables
+.env
+
+# Ignore Docker-related files
+docker-compose.override.yml
+docker-compose.*.yml
+
+# Ignore config directories
+config/*
+
+# Ignore bot credentials
+qBittorrentNotificationsBot/bot_credentials.sh
+
+# Ignore media playlist
+tremenda_lista.m3u
+
+# Ignore node_modules and other dependencies
+node_modules/" > .gitignore
