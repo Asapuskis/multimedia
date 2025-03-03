@@ -118,13 +118,14 @@ services:
       - "6881:6881"
       - "6881:6881/udp"
     restart: unless-stopped
-  
+
   qbit_manage:
     container_name: qbit_manage
     image: ghcr.io/stuffanthings/qbit_manage:latest
     volumes:
-      - /mnt/user/appdata/qbit_manage/:/config:rw
-      - /mnt/user/data/torrents/:/data/torrents:rw
+      - ${CONFIG_DIR}/qbitmanage-config/:/config:rw
+      - ${DATA_DIR}/torrents/:/data/torrents:rw
+      - ${DATA_DIR}/media/:/data/media:rw
       - /mnt/user/appdata/qbittorrent/:/qbittorrent/:ro
     environment:
       - QBT_RUN=false
@@ -146,6 +147,94 @@ services:
       - QBT_DIVIDER==
       - QBT_WIDTH=100
     restart: on-failure:2
+
+  cleanuperr:
+    container_name: cleanuperr
+    image: ghcr.io/flmorg/cleanuperr:latest
+    restart: unless-stopped
+    volumes:
+      - ./cleanuperr/logs:/var/logs
+    environment:
+      - TZ=${TIMEZONE}
+      - DRY_RUN=false
+
+      - LOGGING__LOGLEVEL=Information
+      - LOGGING__FILE__ENABLED=false
+      - LOGGING__FILE__PATH=/var/logs/
+      - LOGGING__ENHANCED=true
+
+      - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
+      - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
+      - TRIGGERS__DOWNLOADCLEANER=0 0 * * * ?
+
+      - QUEUECLEANER__ENABLED=true
+      - QUEUECLEANER__RUNSEQUENTIALLY=true
+      - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
+      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
+      - QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=false
+      # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=title mismatch
+      # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1=manual import required
+      - QUEUECLEANER__STALLED_MAX_STRIKES=5
+      - QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS=false
+      - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
+      - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
+
+      - CONTENTBLOCKER__ENABLED=true
+      - CONTENTBLOCKER__IGNORE_PRIVATE=false
+      - CONTENTBLOCKER__DELETE_PRIVATE=false
+
+      - DOWNLOADCLEANER__ENABLED=true
+      - DOWNLOADCLEANER__DELETE_PRIVATE=false
+      - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=240
+      - DOWNLOADCLEANER__CATEGORIES__1__NAME=movies
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
+      - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
+      - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=240
+
+      # - DOWNLOAD_CLIENT=none
+      # OR
+      - DOWNLOAD_CLIENT=qBittorrent
+      - QBITTORRENT__URL=http://192.168.10.229:8080
+      - QBITTORRENT__USERNAME=${QBITTORRENT_USER}
+      - QBITTORRENT__PASSWORD=${QBITTORRENT_PASS}
+      # OR
+      # - DOWNLOAD_CLIENT=deluge
+      # - DELUGE__URL=http://localhost:8112
+      # - DELUGE__PASSWORD=testing
+      # OR
+      # - DOWNLOAD_CLIENT=transmission
+      # - TRANSMISSION__URL=http://localhost:9091
+      # - TRANSMISSION__USERNAME=test
+      # - TRANSMISSION__PASSWORD=testing
+
+      - SONARR__ENABLED=true
+      - SONARR__SEARCHTYPE=Episode
+      - SONARR__BLOCK__TYPE=blacklist
+      - SONARR__BLOCK__PATH=${BLACKLIST_URL}
+      - SONARR__INSTANCES__0__URL=${SONARR_URL}
+      - SONARR__INSTANCES__0__APIKEY=${SONARR_APIKEY}
+
+      - RADARR__ENABLED=true
+      - RADARR__BLOCK__TYPE=blacklist
+      - RADARR__BLOCK__PATH=${BLACKLIST_URL}
+      - RADARR__INSTANCES__0__URL=${RADARR_URL}
+      - RADARR__INSTANCES__0__APIKEY=${RADARR_APIKEY}
+
+      - LIDARR__ENABLED=true
+      - LIDARR__BLOCK__TYPE=blacklist
+      - LIDARR__BLOCK__PATH=${BLACKLIST_URL}
+      - LIDARR__INSTANCES__0__URL=${LIDARR_URL}
+      - LIDARR__INSTANCES__0__APIKEY=${LIDARR_APIKEY}
+
+      - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
+      - NOTIFIARR__ON_STALLED_STRIKE=true
+      - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
+      - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
+      - NOTIFIARR__API_KEY=${NOTIFIARR_APIKEY}
+      - NOTIFIARR__CHANNEL_ID=${NOTIFIARR_DISCORD_URL}
 
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
