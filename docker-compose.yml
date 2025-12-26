@@ -7,10 +7,13 @@ services:
       - PUID=${UID}
       - PGID=${UID}
       - TZ=${TIMEZONE}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${CONFIG_DIR}/sonarr-config:/config
       - ${DATA_DIR}:/data
+      - ./scripts:/scripts:ro
     ports:
       - "8989:8989"
     restart: unless-stopped
@@ -22,42 +25,15 @@ services:
       - PUID=${UID}
       - PGID=${UID}
       - TZ=${TIMEZONE}
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${CONFIG_DIR}/radarr-config:/config
       - ${DATA_DIR}:/data
+      - ./scripts:/scripts:ro
     ports:
       - "7878:7878"
-    restart: unless-stopped
-
-  lidarr:
-    image: lscr.io/linuxserver/lidarr:latest
-    container_name: lidarr
-    environment:
-      - PUID=${UID}
-      - PGID=${UID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${CONFIG_DIR}/lidarr-config:/config
-      - ${DATA_DIR}:/data
-    ports:
-      - "8686:8686"
-    restart: unless-stopped
-
-  readarr:
-    image: lscr.io/linuxserver/readarr:develop
-    container_name: readarr
-    environment:
-      - PUID=${UID}
-      - PGID=${UID}
-      - TZ=${TIMEZONE}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ${CONFIG_DIR}/readarr-config:/config
-      - ${DATA_DIR}:/data
-    ports:
-      - "8787:8787"
     restart: unless-stopped
 
   bazarr:
@@ -89,18 +65,17 @@ services:
     ports:
       - "9696:9696"
     restart: unless-stopped
-  
-  notifiarr:
-    container_name: notifiarr
-    hostname: notifiarr
-    image: golift/notifiarr
-    restart: unless-stopped
+
+  profilarr:
+    image: santiagosayshey/profilarr:latest
+    container_name: profilarr
     ports:
-      - "5454:5454"
+        - 6868:6868
     volumes:
-      - ${CONFIG_DIR}/notifiarr-config:/config
-      - /var/run/utmp:/var/run/utmp
-      - /etc/machine-id:/etc/machine-id
+        - ${CONFIG_DIR}/profilarr-config:/config
+    environment:
+        - TZ=${TIMEZONE}
+    restart: unless-stopped
 
   qbittorrent:
     image: qbittorrentofficial/qbittorrent-nox:latest
@@ -128,6 +103,8 @@ services:
       - ${DATA_DIR}/media/:/data/media:rw
       - /mnt/user/appdata/qbittorrent/:/qbittorrent/:ro
     environment:
+      - QBIT_USER=${QBIT_USER}
+      - QBIT_PASS=${QBIT_PASS}
       - QBT_RUN=false
       - QBT_SCHEDULE=1440
       - QBT_CONFIG=config.yml
@@ -136,10 +113,10 @@ services:
       - QBT_RECHECK=false
       - QBT_CAT_UPDATE=false
       - QBT_TAG_UPDATE=false
-      - QBT_REM_UNREGISTERED=false
-      - QBT_REM_ORPHANED=false
+      - QBT_REM_UNREGISTERED=true
+      - QBT_REM_ORPHANED=true
       - QBT_TAG_TRACKER_ERROR=false
-      - QBT_TAG_NOHARDLINKS=false
+      - QBT_TAG_NOHARDLINKS=true
       - QBT_SHARE_LIMITS=false
       - QBT_SKIP_CLEANUP=false
       - QBT_DRY_RUN=false
@@ -148,93 +125,30 @@ services:
       - QBT_WIDTH=100
     restart: on-failure:2
 
-  cleanuperr:
-    container_name: cleanuperr
-    image: ghcr.io/flmorg/cleanuperr:latest
+  cleanuparr:
+    image: ghcr.io/cleanuparr/cleanuparr:latest
+    container_name: cleanuparr
     restart: unless-stopped
+    ports:
+      - "11011:11011"
     volumes:
-      - ./cleanuperr/logs:/var/logs
+      - ${CONFIG_DIR}/cleanuparr-config:/config
+      # Mount your downloads directory if needed
+      - ${DATA_DIR}/media:/downloads
     environment:
-      - TZ=${TIMEZONE}
-      - DRY_RUN=false
-
-      - LOGGING__LOGLEVEL=Information
-      - LOGGING__FILE__ENABLED=false
-      - LOGGING__FILE__PATH=/var/logs/
-      - LOGGING__ENHANCED=true
-
-      - TRIGGERS__QUEUECLEANER=0 0/5 * * * ?
-      - TRIGGERS__CONTENTBLOCKER=0 0/5 * * * ?
-      - TRIGGERS__DOWNLOADCLEANER=0 0 * * * ?
-
-      - QUEUECLEANER__ENABLED=true
-      - QUEUECLEANER__RUNSEQUENTIALLY=true
-      - QUEUECLEANER__IMPORT_FAILED_MAX_STRIKES=5
-      - QUEUECLEANER__IMPORT_FAILED_IGNORE_PRIVATE=false
-      - QUEUECLEANER__IMPORT_FAILED_DELETE_PRIVATE=false
-      # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__0=title mismatch
-      # - QUEUECLEANER__IMPORT_FAILED_IGNORE_PATTERNS__1=manual import required
-      - QUEUECLEANER__STALLED_MAX_STRIKES=5
-      - QUEUECLEANER__STALLED_RESET_STRIKES_ON_PROGRESS=false
-      - QUEUECLEANER__STALLED_IGNORE_PRIVATE=false
-      - QUEUECLEANER__STALLED_DELETE_PRIVATE=false
-
-      - CONTENTBLOCKER__ENABLED=true
-      - CONTENTBLOCKER__IGNORE_PRIVATE=false
-      - CONTENTBLOCKER__DELETE_PRIVATE=false
-
-      - DOWNLOADCLEANER__ENABLED=true
-      - DOWNLOADCLEANER__DELETE_PRIVATE=false
-      - DOWNLOADCLEANER__CATEGORIES__0__NAME=tv
-      - DOWNLOADCLEANER__CATEGORIES__0__MAX_RATIO=-1
-      - DOWNLOADCLEANER__CATEGORIES__0__MIN_SEED_TIME=0
-      - DOWNLOADCLEANER__CATEGORIES__0__MAX_SEED_TIME=240
-      - DOWNLOADCLEANER__CATEGORIES__1__NAME=movies
-      - DOWNLOADCLEANER__CATEGORIES__1__MAX_RATIO=-1
-      - DOWNLOADCLEANER__CATEGORIES__1__MIN_SEED_TIME=0
-      - DOWNLOADCLEANER__CATEGORIES__1__MAX_SEED_TIME=240
-
-      # - DOWNLOAD_CLIENT=none
-      # OR
-      - DOWNLOAD_CLIENT=qBittorrent
-      - QBITTORRENT__URL=http://192.168.10.229:8080
-      - QBITTORRENT__USERNAME=${QBITTORRENT_USER}
-      - QBITTORRENT__PASSWORD=${QBITTORRENT_PASS}
-      # OR
-      # - DOWNLOAD_CLIENT=deluge
-      # - DELUGE__URL=http://localhost:8112
-      # - DELUGE__PASSWORD=testing
-      # OR
-      # - DOWNLOAD_CLIENT=transmission
-      # - TRANSMISSION__URL=http://localhost:9091
-      # - TRANSMISSION__USERNAME=test
-      # - TRANSMISSION__PASSWORD=testing
-
-      - SONARR__ENABLED=true
-      - SONARR__SEARCHTYPE=Episode
-      - SONARR__BLOCK__TYPE=blacklist
-      - SONARR__BLOCK__PATH=${BLACKLIST_URL}
-      - SONARR__INSTANCES__0__URL=${SONARR_URL}
-      - SONARR__INSTANCES__0__APIKEY=${SONARR_APIKEY}
-
-      - RADARR__ENABLED=true
-      - RADARR__BLOCK__TYPE=blacklist
-      - RADARR__BLOCK__PATH=${BLACKLIST_URL}
-      - RADARR__INSTANCES__0__URL=${RADARR_URL}
-      - RADARR__INSTANCES__0__APIKEY=${RADARR_APIKEY}
-
-      - LIDARR__ENABLED=true
-      - LIDARR__BLOCK__TYPE=blacklist
-      - LIDARR__BLOCK__PATH=${BLACKLIST_URL}
-      - LIDARR__INSTANCES__0__URL=${LIDARR_URL}
-      - LIDARR__INSTANCES__0__APIKEY=${LIDARR_APIKEY}
-
-      - NOTIFIARR__ON_IMPORT_FAILED_STRIKE=true
-      - NOTIFIARR__ON_STALLED_STRIKE=true
-      - NOTIFIARR__ON_QUEUE_ITEM_DELETED=true
-      - NOTIFIARR__ON_DOWNLOAD_CLEANED=true
-      - NOTIFIARR__API_KEY=${NOTIFIARR_APIKEY}
-      - NOTIFIARR__CHANNEL_ID=${NOTIFIARR_DISCORD_URL}
+      - PORT=11011
+      - BASE_PATH=
+      - PUID=1000
+      - PGID=1000
+      - UMASK=022
+      - TZ=Etc/UTC
+    # Health check configuration
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:11011/health"]
+      interval: 30s        # Check every 30 seconds
+      timeout: 10s         # Allow up to 10 seconds for response
+      start_period: 30s    # Wait 30 seconds before first check
+      retries: 3           # Mark unhealthy after 3 consecutive failures
 
   jellyseerr:
     image: fallenbagel/jellyseerr:latest
