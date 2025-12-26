@@ -16,6 +16,14 @@ services:
       - ./scripts:/scripts:ro
     ports:
       - "8989:8989"
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.sonarr-http.rule=Host(`sonarr.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.sonarr-http.entrypoints=web
+      - traefik.http.routers.sonarr-http.service=sonarr
+      - traefik.http.services.sonarr.loadbalancer.server.port=8989
     restart: unless-stopped
 
   radarr:
@@ -34,6 +42,14 @@ services:
       - ./scripts:/scripts:ro
     ports:
       - "7878:7878"
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.radarr-http.rule=Host(`radarr.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.radarr-http.entrypoints=web
+      - traefik.http.routers.radarr-http.service=radarr
+      - traefik.http.services.radarr.loadbalancer.server.port=7878
     restart: unless-stopped
 
   bazarr:
@@ -49,6 +65,14 @@ services:
       - ${DATA_DIR}:/data
     ports:
       - "6767:6767"
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.bazarr-http.rule=Host(`bazarr.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.bazarr-http.entrypoints=web
+      - traefik.http.routers.bazarr-http.service=bazarr
+      - traefik.http.services.bazarr.loadbalancer.server.port=6767
     restart: unless-stopped
 
   prowlarr:
@@ -64,6 +88,14 @@ services:
       - ${DATA_DIR}:/data
     ports:
       - "9696:9696"
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.prowlarr-http.rule=Host(`prowlarr.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.prowlarr-http.entrypoints=web
+      - traefik.http.routers.prowlarr-http.service=prowlarr
+      - traefik.http.services.prowlarr.loadbalancer.server.port=9696
     restart: unless-stopped
 
   profilarr:
@@ -75,6 +107,14 @@ services:
         - ${CONFIG_DIR}/profilarr-config:/config
     environment:
         - TZ=${TIMEZONE}
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.profilarr-http.rule=Host(`profilarr.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.profilarr-http.entrypoints=web
+      - traefik.http.routers.profilarr-http.service=profilarr
+      - traefik.http.services.profilarr.loadbalancer.server.port=6868
     restart: unless-stopped
 
   qbittorrent:
@@ -92,6 +132,14 @@ services:
       - "8080:8080"
       - "6881:6881"
       - "6881:6881/udp"
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.qbittorrent-http.rule=Host(`qbittorrent.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.qbittorrent-http.entrypoints=web
+      - traefik.http.routers.qbittorrent-http.service=qbittorrent
+      - traefik.http.services.qbittorrent.loadbalancer.server.port=8080
     restart: unless-stopped
 
   qbit_manage:
@@ -142,6 +190,14 @@ services:
       - PGID=1000
       - UMASK=022
       - TZ=Etc/UTC
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cleanuparr-http.rule=Host(`cleanuparr.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.cleanuparr-http.entrypoints=web
+      - traefik.http.routers.cleanuparr-http.service=cleanuparr
+      - traefik.http.services.cleanuparr.loadbalancer.server.port=11011
     # Health check configuration
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11011/health"]
@@ -163,6 +219,14 @@ services:
       - "5055:5055"
     dns:
       - 8.8.8.8
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.jellyseerr-http.rule=Host(`jellyseerr.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.jellyseerr-http.entrypoints=web
+      - traefik.http.routers.jellyseerr-http.service=jellyseerr
+      - traefik.http.services.jellyseerr.loadbalancer.server.port=5055
     restart: unless-stopped
 
   emby:
@@ -177,4 +241,16 @@ services:
     ports:
       - 8097:8096  # Puerto HTTP de Emby
       - 8921:8920  # Puerto HTTPS de Emby (opcional)
+    networks:
+      - monitorizacion
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.emby-http.rule=Host(`emby.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.emby-http.entrypoints=web
+      - traefik.http.routers.emby-http.service=emby
+      - traefik.http.services.emby.loadbalancer.server.port=8096
     restart: unless-stopped
+
+networks:
+  monitorizacion:
+    external: true
