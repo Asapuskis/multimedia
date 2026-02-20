@@ -206,27 +206,33 @@ services:
       start_period: 30s    # Wait 30 seconds before first check
       retries: 3           # Mark unhealthy after 3 consecutive failures
 
-  jellyseerr:
-    image: fallenbagel/jellyseerr:latest
-    container_name: jellyseerr
+  seerr:
+    image: ghcr.io/seerr-team/seerr:latest
+    init: true
+    container_name: seerr
     environment:
       - LOG_LEVEL=debug
       - TZ=${TIMEZONE}
+      - PORT=5056
       - JELLYFIN_TYPE=emby
-    volumes:
-      - ${CONFIG_DIR}/jellyseerr-config:/app/config
     ports:
-      - "5055:5055"
-    dns:
-      - 8.8.8.8
+      - 5056:5056
+    volumes:
+      - ${CONFIG_DIR}/seerr-config:/app/config
     networks:
       - monitorizacion
+    healthcheck:
+      test: wget --no-verbose --tries=1 --spider http://localhost:5056/api/v1/status || exit 1
+      start_period: 20s
+      timeout: 3s
+      interval: 15s
+      retries: 3
     labels:
       - traefik.enable=true
-      - traefik.http.routers.jellyseerr-http.rule=Host(`jellyseerr.${INTERNAL_DOMAIN}`)
-      - traefik.http.routers.jellyseerr-http.entrypoints=web
-      - traefik.http.routers.jellyseerr-http.service=jellyseerr
-      - traefik.http.services.jellyseerr.loadbalancer.server.port=5055
+      - traefik.http.routers.seerr-http.rule=Host(`seerr.${INTERNAL_DOMAIN}`)
+      - traefik.http.routers.seerr-http.entrypoints=web
+      - traefik.http.routers.seerr-http.service=seerr
+      - traefik.http.services.seerr.loadbalancer.server.port=5056
     restart: unless-stopped
 
   emby:
