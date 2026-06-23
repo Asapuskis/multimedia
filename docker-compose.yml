@@ -181,15 +181,17 @@ services:
       - "11011:11011"
     volumes:
       - ${CONFIG_DIR}/cleanuparr-config:/config
-      # Mount your downloads directory if needed
-      - ${DATA_DIR}/media:/downloads
+      # Montar el directorio de torrents igual que qBittorrent lo ve
+      - ${DATA_DIR}/torrents:/data/torrents
+      # Montar el directorio de media para escaneo de huérfanos
+      - ${DATA_DIR}/media:/data/media
     environment:
       - PORT=11011
       - BASE_PATH=
       - PUID=1000
       - PGID=1000
       - UMASK=022
-      - TZ=Etc/UTC
+      - TZ=${TIMEZONE}
     networks:
       - monitorizacion
     labels:
