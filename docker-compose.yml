@@ -9,6 +9,18 @@ services:
       - TZ=${TIMEZONE}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      # Evitar timeouts de .NET hacia TMDB/TVDb por IPv6 roto en el host
+      - DOTNET_SYSTEM_NET_DISABLEIPV6=1
+    extra_hosts:
+      # skyhook.sonarr.tv (metadatos) a veces rota a IPs Cloudflare 188.114.96.0/24
+      # bloqueadas por la ISP (SYN descartados en silencio -> timeouts de 100s).
+      # Forzamos IPs Cloudflare verificadas (HTTP 200 en ~0.07s).
+      - "skyhook.sonarr.tv:104.26.0.163"
+      - "skyhook.sonarr.tv:104.26.1.163"
+      - "skyhook.sonarr.tv:172.67.70.98"
+      - "services.sonarr.tv:104.26.0.163"
+      - "services.sonarr.tv:104.26.1.163"
+      - "services.sonarr.tv:172.67.70.98"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${CONFIG_DIR}/sonarr-config:/config
@@ -35,6 +47,19 @@ services:
       - TZ=${TIMEZONE}
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
       - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      # Evitar timeouts de .NET hacia TMDB por IPv6 roto en el host
+      - DOTNET_SYSTEM_NET_DISABLEIPV6=1
+    extra_hosts:
+      # api.radarr.video (metadatos SkyHook) resuelve a IPs Cloudflare 188.114.96.0/24
+      # bloqueadas por la ISP (SYN descartados en silencio -> timeouts de 100s).
+      # Forzamos IPs Cloudflare que sí responden (verificadas: HTTP 200 en ~0.07s).
+      - "api.radarr.video:104.26.0.163"
+      - "api.radarr.video:104.26.1.163"
+      - "api.radarr.video:172.67.70.98"
+      # Por si algún flujo usa el host antiguo
+      - "skyhook.sonarr.tv:104.26.0.163"
+      - "skyhook.sonarr.tv:104.26.1.163"
+      - "skyhook.sonarr.tv:172.67.70.98"
     volumes:
       - /etc/localtime:/etc/localtime:ro
       - ${CONFIG_DIR}/radarr-config:/config
