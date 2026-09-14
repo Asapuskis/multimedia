@@ -127,11 +127,11 @@ services:
     image: santiagosayshey/profilarr:latest
     container_name: profilarr
     ports:
-        - 6868:6868
+      - 6868:6868
     volumes:
-        - ${CONFIG_DIR}/profilarr-config:/config
+      - ${CONFIG_DIR}/profilarr-config:/config
     environment:
-        - TZ=${TIMEZONE}
+      - TZ=${TIMEZONE}
     networks:
       - monitorizacion
     labels:
@@ -197,10 +197,10 @@ services:
     # Health check configuration
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:11011/health"]
-      interval: 30s        # Check every 30 seconds
-      timeout: 10s         # Allow up to 10 seconds for response
-      start_period: 30s    # Wait 30 seconds before first check
-      retries: 3           # Mark unhealthy after 3 consecutive failures
+      interval: 30s # Check every 30 seconds
+      timeout: 10s # Allow up to 10 seconds for response
+      start_period: 30s # Wait 30 seconds before first check
+      retries: 3 # Mark unhealthy after 3 consecutive failures
 
   seerr:
     image: ghcr.io/seerr-team/seerr:latest
@@ -241,8 +241,8 @@ services:
       - ${CONFIG_DIR}/emby-config:/config
       - ${DATA_DIR}/media/:/data/media/
     ports:
-      - 8097:8096  # Puerto HTTP de Emby
-      - 8921:8920  # Puerto HTTPS de Emby (opcional)
+      - 8097:8096 # Puerto HTTP de Emby
+      - 8921:8920 # Puerto HTTPS de Emby (opcional)
     networks:
       - monitorizacion
     labels:
